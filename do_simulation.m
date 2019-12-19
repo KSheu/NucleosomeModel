@@ -13,29 +13,34 @@ global START_TIME END_TIME NUM_CELLS
 % data_name = 'cpg_100nM';
 % data_name = 'pic_50ug';
 
-% names = {'tnf_10ng', 'p3csk4_100ng','cpg_100nM', 'pic_50ug'};
-% names = {'pic_50ug'};
-% names = {'lps_100ng'}; %add extra 'trajectories.data' if lps (messed up the struct)
+names = {'TNF10ng_762', 'P3CSK4100ng_547','CpG100nM_610', 'LPS100ng_756','PIC50ug_566','aKO_TNF3.3ng', 'aKO_LPS33ng', 'ikbamut_10ngTNF'};
+% names = {'aKO_TNF3.3ng', 'aKO_LPS33ng'};
 % names = {'WT_10ngTNF', 'ikbamut_10ngTNF'};
-names = {'ikbamut_10ngTNF'};
+%%
 for j = 1:length(names)
 data_name = char(names(j));
-data = load(strcat('F://enhancer_dynamics/nfkb_trajectories/',data_name,'.mat'));
+data = load(strcat('F://enhancer_dynamics/nfkb_trajectories_08142019/nfkb_dynamics_',data_name,'.mat'));
 % data = load('F://enhancer_dynamics/nfkb_trajectories_20190302/2KO_TNF.mat');
 data = cell2struct(struct2cell(data), {'trajectories'});
-
-data = data.trajectories;
-datazero = vec2mat(data(:, 1), 1);
-subtract = repmat(datazero, 1, size(data,2));
-data = data - subtract; %subtract the first column to normalize
-data(data<0) = 0; %take neg. values to be 0
+if istable(data.trajectories)
+    data = table2array(data.trajectories);
+else
+    data = data.trajectories;
+end
 data_smooth = smoothrows(data);
-data_smooth = sortrows(data_smooth,[1 20]); %max within first 100 mins
-% data_smooth = data_smooth; %scale to max
+data_smooth(any(isnan(data_smooth), 2), :) = []; %remove NaN rows
+
+datazero = vec2mat(data_smooth(:, 1), 1);
+subtract = repmat(datazero, 1, size(data,2));
+data_smooth = data_smooth - subtract; %subtract the first column to normalize
+data_smooth(data_smooth<0) = 0; %take neg. values to be 0
+maxA = max(data_smooth, [], 2);
+[~, index] = sort(maxA);
+data_smooth = data_smooth(index, :);
 
 START_TIME =0;
 END_TIME = 480;
-NUM_CELLS = size(data,1); %100
+NUM_CELLS = size(data_smooth,1); 
 sim.time = START_TIME:END_TIME;
 % tf = data_smooth(5,1:96); %cut to 8hrs
 % plot(sim.time*5, interp1( 1:length(tf), tf, START_TIME:END_TIME,'nearest'));
@@ -47,7 +52,7 @@ sim.time = START_TIME:END_TIME;
 
 % Starting Conditions
     initvalues = zeros(15,1);
-    initvalues(1,1) = 100;    %E0
+    initvalues(1,1) = 1;    %E0
     initvalues(2,1) = 0;    %E1
 
     initvalues(3,1) = 0;   %E2
@@ -70,7 +75,7 @@ output_enhancer = zeros(NUM_CELLS,481); %container to store the outputs
 r = (1:NUM_CELLS); 
 for i = r
     disp(i);
-    tf = data_smooth(i,1:96); %cut to 8hrs 
+    tf = data_smooth(i,:); %all already cut to 8hrs 
     time = linspace(START_TIME, END_TIME, length(tf));
     [tsim1, results1] = ode15s(@(t,x) chromatinOde(t, x, time,{}, tf),[START_TIME END_TIME],initvalues);
     
@@ -94,10 +99,95 @@ subplot(1,length(names),j);
 imagesc(output_enhancer);
 title(char(names(j)));
 colorbar
-save(strcat('F://enhancer_dynamics/model_v1/output_enhancer_',data_name,'.mat'), 'output_enhancer')
+save(strcat('F://enhancer_dynamics/model_v2/output_enhancer_',data_name,'.mat'), 'output_enhancer')
+end
+%%
+%replot input 
+% names = {'TNF10ng_762', 'P3CSK4100ng_547','CpG100nM_610', 'LPS100ng_756','PIC50ug_566',};
+% names = {'TNF10ng_762','aKO_TNF3.3ng', 'LPS100ng_756','aKO_LPS33ng'};
+names = {'TNF10ng_762', 'ikbamut_10ngTNF'};
+for j = 1:length(names)
+    data_name = char(names(j));
+    data = load(strcat('F://enhancer_dynamics/nfkb_trajectories_08142019/nfkb_dynamics_',data_name,'.mat'));
+    data = cell2struct(struct2cell(data), {'trajectories'});
+    if istable(data.trajectories)
+        data = table2array(data.trajectories);
+    else
+        data = data.trajectories;
+    end
+    data_smooth = smoothrows(data);
+    data_smooth(any(isnan(data_smooth), 2), :) = []; %remove NaN rows
+
+    datazero = vec2mat(data_smooth(:, 1), 1);
+    subtract = repmat(datazero, 1, size(data,2));
+    data_smooth = data_smooth - subtract; %subtract the first column to normalize
+    data_smooth(data_smooth<0) = 0; %take neg. values to be 0
+    maxA = max(data_smooth, [], 2);
+    [~, index] = sort(maxA);
+    data_smooth = data_smooth(index, :);
+%     data_smooth = sortrows(data_smooth, {'maxA'}); %max within first 100 mins
+
+    
+    subplot(1,length(names),j);
+    data = data_smooth;
+    clims = [0 4];
+    imagesc(data, clims);
+    loadcolormaps;
+    colormap(colormaps.byr);
+    title(char(names(j)));
+    shading interp 
+    colorbar
+
+end
+%%
+%replot output
+% names = {'TNF10ng_762', 'P3CSK4100ng_547','CpG100nM_610', 'LPS100ng_756','PIC50ug_566',};
+names = {'TNF10ng_762', 'ikbamut_10ngTNF'};
+for j = 1:length(names)
+    data_name = char(names(j));
+    data = load(strcat('F://enhancer_dynamics/model_v2/output_enhancer_',data_name,'.mat'));
+    subplot(1,length(names),j);
+    data = data.output_enhancer;
+    imagesc(data);
+    title(char(names(j)));
+    colorbar
+
+end
+%%
+%plot summary curves, column means
+names = {'TNF10ng_762', 'P3CSK4100ng_547','CpG100nM_610', 'LPS100ng_756','PIC50ug_566',};
+names = {'TNF10ng_762', 'ikbamut_10ngTNF'};
+for j = 1:length(names)
+    data_name = char(names(j));
+    data = load(strcat('F://enhancer_dynamics/model_v2/output_enhancer_',data_name,'.mat'));
+    subplot(1,length(names),j);
+    data = data.output_enhancer;
+    % sdev = std(data);
+    % plot(smoothrows(mean(data)));
+    stdshade(data, 0.2);
+    ylim([0 1]);
+    xlim([0 480]);
+    title(char(names(j)));
+
 end
 
-%plot summary curves, column means
+%%
+%plot boxplot of maximums
+names = {'TNF10ng_762', 'P3CSK4100ng_547','CpG100nM_610', 'LPS100ng_756','PIC50ug_566',};
+for j = 1:length(names)
+    data_name = char(names(j));
+    data = load(strcat('F://enhancer_dynamics/model_v2/output_enhancer_',data_name,'.mat'));
+    subplot(1,length(names),j);
+    data = data.output_enhancer;
+
+    test =max(data,[],2);
+    violin(test, 'b', 0.2);
+    ylim ([0 100]);
+    title(char(names(j)));
+    hold on
+    x=repmat(1:1,length(test),1);
+    scatter(x(:),test(:),10,'filled','jitter','on','jitterAmount',0.15);
+end
 % load('F://enhancer_dynamics/model_v1/output_enhancer_lps_100ng.mat');
 % plot(smoothrows(mean(output_enhancer)));
 % ylim([0 100]);

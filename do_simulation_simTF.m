@@ -19,64 +19,87 @@ END_TIME = 480;
 % names = {'nfkb_oscillatory','nfkb_nonoscillatory', 'nfkb_oscillatory_hiamp', 'nfkb_nonoscillatory_hiamp'};
 names = {'nfkb_oscillatory','nfkb_nonoscillatory'};
 % names = {'nfkb_oscillatory_2xtotalactivity','nfkb_persistent_2xtotalactivity'}; %use END_TIME=900 if this TF sim
+
+
+output_container = zeros(31, 2);
 for j = 1:length(names)
-data_name = char(names(j));
-% data_name = 'nfkb_curves_TNF';
-data = load(strcat('F://enhancer_dynamics/nfkb_trajectories/simTFs/',data_name,'.mat'));
+    data_name = char(names(j));
+    data = load(strcat('F://enhancer_dynamics/nfkb_trajectories/simTFs/',data_name,'.mat'));
+    data = cell2struct(struct2cell(data), {'nfkb_curves'});
+    % data = (data.nfkb_curves)*30;
 
-data = cell2struct(struct2cell(data), {'nfkb_curves'});
-% data = (data.nfkb_curves)*30;
-data = (data.nfkb_curves)*1;
+    figure;
+    n=1;
+    for k = linspace(0, 2, 31)
+        disp(k);
+        data_use = (data.nfkb_curves)*2*k; %times 2 to get on the same scale as real data
 
+        % Starting Conditions
+        initvalues = zeros(15,1);
+        initvalues(1,1) = 1;    %E0
+        initvalues(2,1) = 0;    %E1
 
+        initvalues(3,1) = 0;   %E2
+        initvalues(4,1) = 0;   %E3
 
-% time = START_TIME:END_TIME;
-% tf = data_smooth(5,1:96); %cut to 8hrs
-% plot(sim.time*5, interp1( 1:length(tf), tf, START_TIME:END_TIME,'nearest'));
-% xlabel('time (min)')
-% ylabel('[TF]')	
-% ylim([0 inf]);
-% f = fit( transpose(time(:,1:96)*5), transpose(tf), 'linearinterp');
-% plot( f, transpose(time(:,1:96)*5), transpose(tf) )
+        initvalues(5,1) = 0;   %E4
+        initvalues(6,1) = 0;   %E5
+        initvalues(7,1) = 0;   %E6
+        initvalues(8,1) = 0;   %E7
+        initvalues(9,1) = 0;   %E8
+        initvalues(10,1) = 0;   %E9
+        initvalues(11,1) = 0;   %E10
+        initvalues(12,1) = 0;   %E11
+        initvalues(13,1) = 0;   %E12
+        initvalues(14,1) = 0;   %E13
+        initvalues(15,1) = 0;   %E14
 
-% Starting Conditions
-initvalues = zeros(15,1);
-initvalues(1,1) = 1;    %E0
-initvalues(2,1) = 0;    %E1
+        tf = transpose(data_use); %cut to 8hrs
+        time = linspace(START_TIME, END_TIME, length(tf));
+        [tsim1, results1] = ode15s(@(t,y) chromatinOde(t, y, time,{}, tf),[START_TIME END_TIME],initvalues);
 
-initvalues(3,1) = 0;   %E2
-initvalues(4,1) = 0;   %E3
+        output = transpose(interp1(tsim1,results1,START_TIME:END_TIME, 'linear'));
 
-initvalues(5,1) = 0;   %E4
-initvalues(6,1) = 0;   %E5
-initvalues(7,1) = 0;   %E6
-initvalues(8,1) = 0;   %E7
-initvalues(9,1) = 0;   %E8
-initvalues(10,1) = 0;   %E9
-initvalues(11,1) = 0;   %E10
-initvalues(12,1) = 0;   %E11
-initvalues(13,1) = 0;   %E12
-initvalues(14,1) = 0;   %E13
-initvalues(15,1) = 0;   %E14
+        %plot single simulation
+        plot(output(15,:));
+        xlim ([0 480]);
+        ylim([0 1]);
+        hold on;
 
+    max_enhancer = max(output(15,:));
+    output_container(n,j) = max_enhancer;
+    n=n+1;
+    end
 
-
-tf = transpose(data); %cut to 8hrs
-time = linspace(START_TIME, END_TIME, length(tf));
-[tsim1, results1] = ode15s(@(t,y) chromatinOde(t, y, time,{}, tf),[START_TIME END_TIME],initvalues);
-
-%   [t_sim, x_sim] = ode15s(@(t,y)'chromatinOde', v.SIM_TIME,starting_vals,ode_opt,v);
-
-output = transpose(interp1(tsim1,results1,START_TIME:END_TIME, 'linear'));
-
-subplot(1,length(names),j);
-plot(output(15,:));
-ylim([0 1]);
-title(char(names(j)));
-colorbar
 end
+end
+end
+%%
+%plot output_container, max chromatin opening
+output_container(:,3) = linspace(0,2,31);
+figure;
+plot(output_container(:,3), output_container(:,1));
+hold on;
+plot(output_container(:,3), output_container(:,2));
+hold off
 
+legend('oscillatory','non-oscillatory')
 
+%%
+%plot simTFs
 
-% plot(output(15,:));
-
+names = {'nfkb_oscillatory','nfkb_nonoscillatory'};
+figure;
+for j = 1:length(names)
+    data_name = char(names(j));
+    data = load(strcat('F://enhancer_dynamics/nfkb_trajectories/simTFs/',data_name,'.mat'));
+    data = cell2struct(struct2cell(data), {'nfkb_curves'});
+    data = (data.nfkb_curves)*1;
+    
+    
+    plot(data);
+    xlim ([0 480]);
+    ylim ([0 1.2]);
+    hold on;
+    
+end
