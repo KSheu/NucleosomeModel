@@ -39,7 +39,7 @@ for j = linspace(.75, 7, 17)
     hold on;
     
     m=1;
-    for k = linspace(0.5, 1, 2) %0.5 or 1
+    for k = [0.5, 0.6, 0.8, 1, 1.2] %linspace(0.5, 1, 2) %0.5 or 1
         disp(k);
         data_use = (tf)*2*k;
 
@@ -85,14 +85,25 @@ end
 
 %%
 %plot output_container, max chromatin opening
-output_container(:,3) = start_idx+60*linspace(.75, 7, 17);
+output_container(:,m+1) = start_idx+60*linspace(.75, 7, 17);
 figure;
-plot(output_container(:,3), output_container(:,1));
+plot(output_container(:,m+1), output_container(:,1));
 hold on;
-plot(output_container(:,3), output_container(:,2));
+plot(output_container(:,m+1), output_container(:,2));
+hold on;
+plot(output_container(:,m+1), output_container(:,3));
+hold on;
+plot(output_container(:,m+1), output_container(:,4));
+hold on;
+plot(output_container(:,m+1), output_container(:,5));
+% hold on;
+% plot(output_container(:,m+1), output_container(:,6));
+% hold on;
+% plot(output_container(:,m+1), output_container(:,7));
 hold off
 
-legend('non-oscillatory amp0.5','non-oscillatory amp1')
+legend('non-oscillatory amp0.5','non-oscillatory amp0.6','non-oscillatory amp0.8','non-oscillatory amp1.0','non-oscillatory amp1.2')
+% legend('non-oscillatory amp0.5','non-oscillatory amp1')
 
 %%
 %plot simTFs

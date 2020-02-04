@@ -2497,7 +2497,6 @@ colormaps.spectrum = [
   248  190   44
   247  191   44]/255;
 
-
 %%
       
 if nargout<1

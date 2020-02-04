@@ -103,9 +103,9 @@ save(strcat('F://enhancer_dynamics/model_v2/output_enhancer_',data_name,'.mat'),
 end
 %%
 %replot input 
-% names = {'TNF10ng_762', 'P3CSK4100ng_547','CpG100nM_610', 'LPS100ng_756','PIC50ug_566',};
+names = {'TNF10ng_762', 'P3CSK4100ng_547','CpG100nM_610', 'LPS100ng_756','PIC50ug_566',};
 % names = {'TNF10ng_762','aKO_TNF3.3ng', 'LPS100ng_756','aKO_LPS33ng'};
-names = {'TNF10ng_762', 'ikbamut_10ngTNF'};
+% names = {'TNF10ng_762', 'ikbamut_10ngTNF'};
 for j = 1:length(names)
     data_name = char(names(j));
     data = load(strcat('F://enhancer_dynamics/nfkb_trajectories_08142019/nfkb_dynamics_',data_name,'.mat'));
@@ -122,18 +122,28 @@ for j = 1:length(names)
     subtract = repmat(datazero, 1, size(data,2));
     data_smooth = data_smooth - subtract; %subtract the first column to normalize
     data_smooth(data_smooth<0) = 0; %take neg. values to be 0
-    maxA = max(data_smooth, [], 2);
+    maxA = max(data_smooth, [], 2); %absolute row max
     [~, index] = sort(maxA);
     data_smooth = data_smooth(index, :);
+    save(strcat('F://enhancer_dynamics/model_v2/model_input_nfkb_dynamics_',data_name,'.mat'), 'data_smooth')
+
 %     data_smooth = sortrows(data_smooth, {'maxA'}); %max within first 100 mins
 
-    
+    % Plot heatmap, new colormap
+%     mod_colormap1 = [123 59 48]/255;
+%     mod_colormap2 = [17 103 177]/255;  44,46,67; 54,94,130
+%     mod_colormap = [mod_colormap2; [220 221 217]/255; mod_colormap1];
+%     mod_colormap = [[transpose(linspace(54,220)) transpose(linspace(94,221)) transpose(linspace(130,217))];
+%     [transpose(linspace(220, 123)) transpose(linspace(221, 59)) transpose(linspace(217,48))]]/255;
+ 
     subplot(1,length(names),j);
     data = data_smooth;
     clims = [0 4];
     imagesc(data, clims);
     loadcolormaps;
     colormap(colormaps.byr);
+    
+%     colormap(mod_colormap);
     title(char(names(j)));
     shading interp 
     colorbar
@@ -141,14 +151,17 @@ for j = 1:length(names)
 end
 %%
 %replot output
-% names = {'TNF10ng_762', 'P3CSK4100ng_547','CpG100nM_610', 'LPS100ng_756','PIC50ug_566',};
-names = {'TNF10ng_762', 'ikbamut_10ngTNF'};
+names = {'TNF10ng_762', 'P3CSK4100ng_547','CpG100nM_610', 'LPS100ng_756','PIC50ug_566',};
+% names = {'TNF10ng_762', 'ikbamut_10ngTNF'};
 for j = 1:length(names)
     data_name = char(names(j));
     data = load(strcat('F://enhancer_dynamics/model_v2/output_enhancer_',data_name,'.mat'));
     subplot(1,length(names),j);
     data = data.output_enhancer;
     imagesc(data);
+    mod_colormap = [[transpose(linspace(0,220)) transpose(linspace(0,221)) transpose(linspace(128,217))];
+    [transpose(linspace(220, 178)) transpose(linspace(221, 34)) transpose(linspace(217,34))]]/255;
+    colormap(mod_colormap);
     title(char(names(j)));
     colorbar
 
