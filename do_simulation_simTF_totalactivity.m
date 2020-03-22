@@ -39,9 +39,9 @@ for j = linspace(.75, 7, 17)
     hold on;
     
     m=1;
-    for k = [0.5, 0.6, 0.8, 1, 1.2] %linspace(0.5, 1, 2) %0.5 or 1
+    for k = [0.1, 0.15 0.2, 0.3, 0.4, 0.5, 1.0] %linspace(0.5, 1, 2) %0.5 or 1
         disp(k);
-        data_use = (tf)*2*k;
+        data_use = (tf)*8*k; %times 8 to get on the same scale as real data (max 0.25nM)
 
         % Starting Conditions
         initvalues = zeros(15,1);
@@ -96,13 +96,14 @@ hold on;
 plot(output_container(:,m+1), output_container(:,4));
 hold on;
 plot(output_container(:,m+1), output_container(:,5));
-% hold on;
-% plot(output_container(:,m+1), output_container(:,6));
-% hold on;
-% plot(output_container(:,m+1), output_container(:,7));
+hold on;
+plot(output_container(:,m+1), output_container(:,6));
+hold on;
+plot(output_container(:,m+1), output_container(:,7));
 hold off
 
-legend('non-oscillatory amp0.5','non-oscillatory amp0.6','non-oscillatory amp0.8','non-oscillatory amp1.0','non-oscillatory amp1.2')
+legend('non-oscillatory amp0.1','non-oscillatory amp0.15','non-oscillatory amp0.2','non-oscillatory amp0.3','non-oscillatory amp0.4','non-oscillatory amp0.5','non-oscillatory amp1.0')
+% legend('non-oscillatory amp0.5','non-oscillatory amp0.6','non-oscillatory amp0.8','non-oscillatory amp1.0','non-oscillatory amp1.2')
 % legend('non-oscillatory amp0.5','non-oscillatory amp1')
 
 %%

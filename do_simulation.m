@@ -169,7 +169,7 @@ end
 %%
 %plot summary curves, column means
 names = {'TNF10ng_762', 'P3CSK4100ng_547','CpG100nM_610', 'LPS100ng_756','PIC50ug_566',};
-names = {'TNF10ng_762', 'ikbamut_10ngTNF'};
+% names = {'TNF10ng_762', 'ikbamut_10ngTNF'};
 for j = 1:length(names)
     data_name = char(names(j));
     data = load(strcat('F://enhancer_dynamics/model_v2/output_enhancer_',data_name,'.mat'));
@@ -194,13 +194,15 @@ for j = 1:length(names)
     data = data.output_enhancer;
 
     test =max(data,[],2);
+    disp(median(test));
     violin(test, 'b', 0.2);
-    ylim ([0 100]);
+    ylim ([0 1]);
     title(char(names(j)));
     hold on
     x=repmat(1:1,length(test),1);
     scatter(x(:),test(:),10,'filled','jitter','on','jitterAmount',0.15);
 end
+
 % load('F://enhancer_dynamics/model_v1/output_enhancer_lps_100ng.mat');
 % plot(smoothrows(mean(output_enhancer)));
 % ylim([0 100]);

@@ -26,8 +26,9 @@ for j = 1:length(names)
     data_name = char(names(j));
     data = load(strcat('F://enhancer_dynamics/nfkb_trajectories/simTFs/',data_name,'.mat'));
     data = cell2struct(struct2cell(data), {'nfkb_curves'});
+    % data = (data.nfkb_curves)*30;
     
-    data_use = (data.nfkb_curves)/4; %div 4 to set max to 0.25uM NFkB (Kd = 0.025uM here)
+    data_use = (data.nfkb_curves)/4; %times 8 to get on the same scale as real data
 
     % Starting Conditions
     initvalues = zeros(15,1);
@@ -50,14 +51,14 @@ for j = 1:length(names)
     initvalues(15,1) = 0;   %E14
 
     %% scan different parameters
-    
-    forward_factor = 1.2;
-    reverse_factor = 0.8;
     n=1;
-    for k1 = [0.1 1 2 5 10 15 20 25 30 40 50 60] 
-        disp(k1);
-        ratio = 7.5;
-%     for ratio = [2 2.5 5 7.5 10 12.5 15 17.5 20]
+    for forward_factor = [1.0 1.1 1.2 1.3 1.4 1.5] 
+        disp(forward_factor);
+    for reverse_factor = [0.5 0.6 0.7 0.8 0.9 1.0]
+    
+    k1 =10;
+    ratio = 7.5;
+    
     p_mod = [
     1 1 k1 % k1
     3 1 k1*forward_factor % k1
@@ -92,7 +93,7 @@ for j = 1:length(names)
 %%
 %     for Hill = [0.01 0.05 0.1 0.5 1 1.5 2 2.5 3 4 5 6]
 %         disp(Hill);
-%     for Kd = [0.01 0.1 0.5 0.8 1 1.2 2 5 10 20 50 100]/(32) 
+%     for Kd = [0.01 0.1 0.5 0.8 1 1.2 2 5 10]/32 
 %         disp(Kd);
 %     p_mod = [
 %     1 3 Kd % Kd1
@@ -109,7 +110,7 @@ for j = 1:length(names)
 %     23 3 Kd % Kd1
 %     25 3 Kd % Kd1
 %     27 3 Kd % Kd1
-    
+%     
 %     1 2 Hill % Hill
 %     3 2 Hill % Hill
 %     5 2 Hill % Hill
@@ -147,18 +148,18 @@ for j = 1:length(names)
     output_container(n,j) = max_enhancer;
     n=n+1;
     end
-%     end
+    end
 end
 %%
-%plot output_container for k1 and ratio sweep
+%plot output_container for  reverse and forwrad factor sweep
 output_container(:,3) = output_container(:,2)./output_container(:,1);
 i=1;
-for k1 = [0.1 1 2 5 10 20 30 40 50 60] 
-    disp(k1);
-    for ratio = [2 2.5 5 7.5 10 12.5 15 17.5 20]
-        disp(ratio);
-        output_container(i,4) = k1;
-        output_container(i,5) = ratio;
+for forward_factor = [1.0 1.1 1.2 1.3 1.4 1.5]
+    disp(forward_factor);
+    for reverse_factor = [0.5 0.6 0.7 0.8 0.9 1.0]
+        disp(reverse_factor);
+        output_container(i,4) = forward_factor;
+        output_container(i,5) = reverse_factor;
         i= i+1;
     end
 end
@@ -167,32 +168,25 @@ Data = xyz2grid(output_container(:,4), output_container(:,5), output_container(:
 figure;
 imagesc(Data);
 colorbar;
-%% k1 sweep only
-output_container(:,3) = [0.1 1 2 5 10 15 20 25 30 40 50 60]; %k1
 
-figure;
-plot(output_container(:,3), output_container(:,1));
-hold on;
-plot(output_container(:,3), output_container(:,2));
-hold off
-% xlabel('log10(Kd)');
-xlabel('k_{-14}');
-ylabel('Max chromatin opening');
-legend('oscillatory','non-oscillatory')
 %%
-%plot output_container, max chromatin opening, use for SuppFig3bc
-% output_container(:,3) = log10([0.01 0.1 0.5 0.8 1 1.2 2 5 10 20 50 100]/32); %for Kd
-output_container(:,3) = [0.01 0.05 0.1 0.5 1 1.5 2 2.5 3 4 5 6]; %for Hill
+%plot output_container for Hill and Kd sweep
+output_container(:,3) = output_container(:,2)./output_container(:,1);
+i=1;
+for Hill = [0.01 0.05 0.1 0.5 1 1.5 2 2.5 3 4 5 6]
+        disp(Hill);
+    for Kd = [0.01 0.1 0.5 0.8 1 1.2 2 5 10]/32 
+        disp(Kd);
+        output_container(i,4) = Hill;
+        output_container(i,5) = Kd;
+        i= i+1;
+    end
+end
 
+Data = xyz2grid(output_container(:,4), output_container(:,5), output_container(:,1));
 figure;
-plot(output_container(:,3), output_container(:,1));
-hold on;
-plot(output_container(:,3), output_container(:,2));
-hold off
-% xlabel('log10(Kd)');
-xlabel('Hill coefficient');
-ylabel('Max chromatin opening');
-legend('oscillatory','non-oscillatory')
+imagesc(Data);
+colorbar;
 
 %%
 %plot fold change in max chromatin opening for osc. vs non-osc

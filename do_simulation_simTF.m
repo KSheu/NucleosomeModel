@@ -20,19 +20,20 @@ END_TIME = 480;
 names = {'nfkb_oscillatory','nfkb_nonoscillatory'};
 % names = {'nfkb_oscillatory_2xtotalactivity','nfkb_persistent_2xtotalactivity'}; %use END_TIME=900 if this TF sim
 
-
+figure;
 output_container = zeros(21, 2);
 for j = 1:length(names)
     data_name = char(names(j));
     data = load(strcat('F://enhancer_dynamics/nfkb_trajectories/simTFs/',data_name,'.mat'));
     data = cell2struct(struct2cell(data), {'nfkb_curves'});
-    % data = (data.nfkb_curves)*30;
+    
 
-    figure;
+    
     n=1;
-    for k = linspace(0, 2, 21)
+    for k = linspace(0, 1, 21)
+%         k = 1;
         disp(k);
-        data_use = (data.nfkb_curves)*2*k; %times 2 to get on the same scale as real data
+        data_use = (data.nfkb_curves)*8*k; %times 8 to get on the same scale as real data (max 0.25nM)
 
         % Starting Conditions
         initvalues = zeros(15,1);
@@ -75,18 +76,20 @@ end
 
 %%
 %plot output_container, max chromatin opening
-output_container(:,3) = linspace(0,2,21);
+output_container(:,3) = linspace(0,1,21);
 figure;
 plot(output_container(:,3), output_container(:,1));
 hold on;
 plot(output_container(:,3), output_container(:,2));
 hold off
 
+xlabel('amplitude (fold)');
+ylabel('fraction (E_0)');
 legend('oscillatory','non-oscillatory')
 
 %%
 %plot fold change in max chromatin opening for osc. vs non-osc
-output_container(:,3) = linspace(0,2,21);
+output_container(:,3) = linspace(0,1,21);
 figure;
 plot(output_container(:,3), output_container(:,2)/output_container(:,1));
 
